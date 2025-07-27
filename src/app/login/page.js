@@ -22,16 +22,18 @@ export default function Login() {
   };
 
   const loginRequest = async () => {
-    console.log("initial")
-    const response = await axios.post(`http://localhost:3000/user/login`, {
+    const response = await axios.post(`http://localhost:8080/users`, {
       email: email,
       password: password,
     })
-    console.log(response);
+
     if (response != null) {
-      localStorage.setItem("userId", response.data.userId);
-      localStorage.setItem("role", response.data.role);
-      localStorage.setItem("name", response.data.name);
+      const data = response.data.data;
+      console.log(data);
+
+      localStorage.setItem("userId", data.id);
+      localStorage.setItem("role", data.roleId);
+      localStorage.setItem("name", data.name);
       router.push("/dashboard");
     }
   }

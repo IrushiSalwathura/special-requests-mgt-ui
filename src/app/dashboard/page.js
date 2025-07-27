@@ -29,9 +29,9 @@ export default function Dashbaord(){
       }, [router]);
 
     useEffect(() => {
-        axios.get("http://localhost:3000/request")
+        axios.get("http://localhost:8080/requests")
         .then((response) => {
-            setRequests(response.data);
+            setRequests(response.data.data);
             setLoading(false);
         })
         .catch((error) => {

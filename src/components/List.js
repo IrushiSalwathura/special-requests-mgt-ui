@@ -1,7 +1,8 @@
 import ListItem from "./ListItem";
 
 export default function List({data,role}){
-  const isAdmin = role == "USER" ? false : true;
+  console.log("Data received:", data);
+  const isAdmin = role == "2" ? false : true; //role=="2" means user
     return(
     <div className="overflow-x-auto p-4">
       <table className="min-w-full bg-white border border-gray-300 shadow-lg rounded-lg">
@@ -19,7 +20,7 @@ export default function List({data,role}){
         </thead>
         <tbody className="overflow-y-auto">
             {data.map((item) => (
-                <ListItem key={item._id} item={item} data={data} isAdmin={isAdmin}/>
+                <ListItem key={item.id} item={item} data={data} isAdmin={isAdmin}/>
           ))}
         </tbody>
       </table>

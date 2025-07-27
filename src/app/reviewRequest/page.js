@@ -36,7 +36,7 @@ export default function ReviewRequest() {
     }, [])
 
     const getRequestById = () => {
-        axios.get(`http://localhost:3000/request/${requestId}`)
+        axios.get(`http://localhost:8080/requests/${requestId}`)
             .then((response) => {
                 setRequest(response.data);
                 setLoading(false);
@@ -54,7 +54,7 @@ export default function ReviewRequest() {
             return;
         }
 
-        const response = axios.put(`http://localhost:3000/request/review/${requestId}`, {
+        const response = axios.put(`http://localhost:8080/requests/review/${requestId}`, {
             status: decision,
             feedback: feedback || null,
         })
@@ -70,7 +70,7 @@ export default function ReviewRequest() {
 
     if(loading) return <Loader />
     return (
-        <>
+        <Suspense>
             <Header name={user.name} role={user.role} />
             <div className="pt-20 px-20">
                 <div className="p-6 bg-white shadow-md rounded-lg border border-stone-200">
@@ -161,6 +161,6 @@ export default function ReviewRequest() {
 
                 </div>
             </div>
-        </>
+        </Suspense>
     );
 }

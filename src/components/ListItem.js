@@ -5,7 +5,7 @@ import axios from "axios";
 
 export default function ListItem({item,data,isAdmin}){
     const router = useRouter();
-    const requestId = item._id;
+    const requestId = item.id;
 
     const handleReview = () => {
         router.push(`/reviewRequest?id=${requestId}`);
@@ -21,7 +21,7 @@ export default function ListItem({item,data,isAdmin}){
 
         if (userConfirmed) {
             console.log('User clicked OK');
-            const response = await axios.delete(`http://localhost:3000/request/${requestId}`);
+            const response = await axios.delete(`http://localhost:8080/requests/${requestId}`);
             alert(response.data);
             window.location.reload();
         } else {

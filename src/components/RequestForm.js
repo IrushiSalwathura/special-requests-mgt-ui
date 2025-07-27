@@ -9,8 +9,10 @@ const requestType =[
     {type: "PRODUCT_MARKETING", value:"Product Marketing"}
 ]
 
+
 const user =localStorage.getItem("name");
 const userRole = localStorage.getItem("role");
+const userId = localStorage.getItem("userId");
 
 export default function RequestForm({mode,id}) {
     const [selectedFile, setSelectedFile] = useState(null);
@@ -21,8 +23,10 @@ export default function RequestForm({mode,id}) {
         email: "",
         type: "",
         description: "",
+        status: "PENDING",
         preferredDate: "",
         preferredTime: "",
+        userId: userId,
     });
     
     const [errors, setErrors] = useState({
@@ -30,17 +34,19 @@ export default function RequestForm({mode,id}) {
         email: "",
         type: "",
         description: "",
+        status: "",
         preferredDate: "",
         preferredTime: "",
+        userId: ""
     });
 
     useEffect(() => {
         console.log(id);
         if(id!==null){
-            axios.get(`http://localhost:3000/request/${id}`)
+            axios.get(`http://localhost:8080/requests/${id}`)
             .then((response) => {
-                console.log(response.data)
-                setRequest(response.data);
+                console.log(response);
+                setRequest(response.data.requestData);
                 // setLoading(false);
             })
             .catch((error) => {
@@ -67,185 +73,113 @@ export default function RequestForm({mode,id}) {
             setRequest({
                 ...request,
                 [name]: value,
-              });
+              })
         }
     };
     
+    
     const validateForm = () => {
         let formIsValid = true;
-        let errorMessages = { name: "", email: "", type: "",
+        let errorMessages = {
+            name: "",
+            email: "",
+            type: "",
             description: "",
             preferredDate: "",
-            preferredTime: "" };
+            preferredTime: ""
+        };
+    
+        const data = mode === "Create" ? formData : request;
     
         // Name validation
-        if(mode==="Create"){
-            if (!formData.name) {
-                formIsValid = false;
-                errorMessages.name = "Name is required";
-            }
-        }else{
-            if (!request.name){
-                formIsValid = false;
-                errorMessages.name = "Name is required";
-            }
+        if (!data.name) {
+            formIsValid = false;
+            errorMessages.name = "Name is required";
         }
     
         // Email validation
         const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-        if(mode==="Create"){
-            if (!formData.email) {
-                formIsValid = false;
-                errorMessages.email = "Email is required";
-            } else if (!emailPattern.test(formData.email) ) {
-                formIsValid = false;
-                errorMessages.email = "Invalid email format";
-                }
-        }else {
-            if (!request.email){
-                formIsValid = false;
-                errorMessages.email = "Email is required";
-            }else if (!emailPattern.test(request.email) ) {
-                formIsValid = false;
-                errorMessages.email = "Invalid email format";
-            }
-        } 
-    
-    
-        // RequestType validation
-        if(mode==="Create"){
-            if (!formData.type) {
-                formIsValid = false;
-                errorMessages.type = "Request Type is required";
-            }
-        }else{
-            if (!request.type){
-                formIsValid = false;
-                errorMessages.type = "Request Type is required";
-            }
+        if (!data.email) {
+            formIsValid = false;
+            errorMessages.email = "Email is required";
+        } else if (!emailPattern.test(data.email)) {
+            formIsValid = false;
+            errorMessages.email = "Invalid email format";
         }
-
+    
+        // Request Type validation
+        if (!data.type) {
+            formIsValid = false;
+            errorMessages.type = "Request Type is required";
+        }
+    
         // Description validation
-        if(mode==="Create"){
-            if (!formData.description) {
+        if (!data.description) {
+            formIsValid = false;
+            errorMessages.description = "Description is required";
+        }
+    
+        // Preferred Date validation
+        if (!data.preferredDate) {
+            formIsValid = false;
+            errorMessages.preferredDate = "Date is required";
+        } else {
+            const today = new Date();
+            const selectedDate = new Date(data.preferredDate);
+    
+            if (selectedDate < today.setHours(0, 0, 0, 0)) {
                 formIsValid = false;
-                errorMessages.description = "Description is required";
-            }
-        }else{
-            if (!request.description){
-                formIsValid = false;
-                errorMessages.description = "Description is required";
+                errorMessages.preferredDate = "Date must be in the future";
             }
         }
-
-        // Date validation 
-        if(mode==="Create"){
-            if (!formData.preferredDate) {
-                formIsValid = false;
-                errorMessages.preferredDate = "Date is required";
-            }else if(!formData.preferredDate){
-                const today = new Date();
-                const selectedDate = new Date(formData.preferredDate);
-        
-                // date must be in the future
-                if (selectedDate < today.setHours(0, 0, 0, 0)) {
-                    formIsValid = false;
-                    errorMessages.preferredDate = "Date must be in the future";
-                }
-            }
-        } else {
-            if (!request.preferredDate){
-                formIsValid = false;
-                errorMessages.preferredDate = "Date is required";
-            } else if(!request.preferredDate){
-                const today = new Date();
-                const selectedDate = new Date(request.preferredDate);
-        
-                // date must be in the future
-                if (selectedDate < today.setHours(0, 0, 0, 0)) {
-                    formIsValid = false;
-                    errorMessages.preferredDate = "Date must be in the future";
-                }
-            }
-        } 
-
-        // Time validation
-        if (mode=="Create"){
-            if(!formData.preferredTime) {
-                formIsValid = false;
-                errorMessages.preferredTime = "Time is required";
-            } else if (formData.preferredDate) {
-                const today = new Date();
-                const selectedDate = new Date(formData.preferredDate);
-                const selectedTime = formData.preferredTime.split(":");
-                const selectedHour = parseInt(selectedTime[0]);
-                const selectedMinute = parseInt(selectedTime[1]);
-        
-                if (selectedDate.toDateString() === today.toDateString()) {
+    
+        // Preferred Time validation (includes seconds)
+        if (!data.preferredTime) {
+            formIsValid = false;
+            errorMessages.preferredTime = "Time is required";
+        } else if (data.preferredDate) {
+            const today = new Date();
+            const selectedDate = new Date(data.preferredDate);
+            const selectedTime = data.preferredTime.split(":");
+            const selectedHour = parseInt(selectedTime[0], 10);
+            const selectedMinute = parseInt(selectedTime[1], 10);
+            const selectedSecond = parseInt(selectedTime[2] || "0", 10); // Default to 0 if seconds not present
+    
+            if (selectedDate.toDateString() === today.toDateString()) {
                 const now = new Date();
                 const currentHour = now.getHours();
                 const currentMinute = now.getMinutes();
-        
+                const currentSecond = now.getSeconds();
+    
                 if (
                     selectedHour < currentHour ||
-                    (selectedHour === currentHour && selectedMinute < currentMinute)
+                    (selectedHour === currentHour && selectedMinute < currentMinute) ||
+                    (selectedHour === currentHour && selectedMinute === currentMinute && selectedSecond <= currentSecond)
                 ) {
                     formIsValid = false;
                     errorMessages.preferredTime = "Time must be in the future";
                 }
-                }
             }
-        } else  {
-            if (!request.preferredTime){
-                formIsValid = false;
-                errorMessages.preferredTime = "Date is required";
-            }else if (request.preferredDate) {
-                const today = new Date();
-                const selectedDate = new Date(request.preferredDate);
-                const selectedTime = request.preferredTime.split(":");
-                const selectedHour = parseInt(selectedTime[0]);
-                const selectedMinute = parseInt(selectedTime[1]);
-        
-                if (selectedDate.toDateString() === today.toDateString()) {
-                const now = new Date();
-                const currentHour = now.getHours();
-                const currentMinute = now.getMinutes();
-        
-                if (
-                    selectedHour < currentHour ||
-                    (selectedHour === currentHour && selectedMinute < currentMinute)
-                ) {
-                    formIsValid = false;
-                    errorMessages.preferredTime = "Time must be in the future";
-                }
-                }
-            }
-        } 
-        
-
-    setErrors(errorMessages);
+        }
+    
+        setErrors(errorMessages);
         return formIsValid;
     };
     
+    
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log(validateForm());
+        // console.log("Request: " + request.name);
         if (validateForm()) {
           alert("Request submitted successfully!");
           
           try {
-            console.log(formData);
-            
             // Make the POST request to the backend
             if(mode === "Create"){
-                const response = await axios.post("http://localhost:3000/request", formData, {
-                withCredentials: true,
-                });
+                const response = await axios.post("http://localhost:8080/requests", formData);
             } else {
                 //If in Edit mode
-                const response = await axios.put(`http://localhost:3000/request/${id}`, request, {
-                    withCredentials: true,
-                    });
+                const response = await axios.put(`http://localhost:8080/requests/${id}`, request);
             }
       
             // setMessage(response.data.message); 
@@ -272,7 +206,7 @@ export default function RequestForm({mode,id}) {
               className="mt-1 block w-full p-2 border border-stone-300 rounded-md focus:ring-stone-600 focus:border-stone-500"
               placeholder="Your Name"
               name="name"
-              value={mode==="Create" ? formData.name : request?.name}
+              value={mode==="Create" ? formData.name || "" : request?.name || ""}
               onChange={handleInputChange}
             />
             {errors.name && <p style={{ color: "red" }}>{errors.name}</p>}
@@ -285,7 +219,7 @@ export default function RequestForm({mode,id}) {
               className="mt-1 block w-full p-2 border border-stone-300 rounded-md focus:ring-stone-600 focus:border-stone-500"
               placeholder="Your Email"
               name="email"
-              value={mode==="Create" ? formData.email : request?.email}
+              value={mode==="Create" ? formData.email || "" : request?.email || ""}
               onChange={handleInputChange}
             />
             {errors.email && <p style={{ color: "red" }}>{errors.email}</p>}
@@ -296,7 +230,7 @@ export default function RequestForm({mode,id}) {
             <select className="mt-1 block w-full border border-stone-300 p-2 rounded-md focus:border-stone-500 focus:ring-2 focus:ring-stone-500"
                     onChange={handleInputChange}
                     name="type"
-                    value={mode==="Create" ? formData.type : request?.type}>
+                    value={mode==="Create" ? formData.type || "" : request?.type || ""}>
                 <option defaultValue>Select an Option..{mode==="Edit" && request?.type}</option>
                 {requestType.map(type => 
                     <option key={requestType.indexOf(type)} value={type.type}>{type.value}</option>
@@ -315,7 +249,7 @@ export default function RequestForm({mode,id}) {
               rows="4"
               placeholder="Brief Description"
               name="description"
-              value={mode==="Create" ? formData.description : request?.description}
+              value={mode==="Create" ? formData.description || "" : request?.description || ""}
               onChange={handleInputChange}
             ></textarea>
             {errors.description && <p style={{ color: "red" }}>{errors.description}</p>}
@@ -327,18 +261,20 @@ export default function RequestForm({mode,id}) {
               type="date"
               className="mt-2 block w-full p-2 border border-stone-300 rounded-md focus:ring-stone-600 focus:border-stone-500"
               name="preferredDate"
-              value={mode==="Create" ? formData.preferredDate : request?.preferredDate}
+              value={mode==="Create" ? formData.preferredDate || "" : request?.preferredDate || ""}
               onChange={handleInputChange}
             />
             {errors.date && <p style={{ color: "red" }}>{errors.date}</p>}
             <input
                 type="time"
+                step="1" // enables seconds
                 className="mt-2 block w-full p-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-stone-500 focus:border-stone-500"
                 name="preferredTime"
-                value={mode==="Create" ? formData.preferredTime : request?.preferredTime}
+                value={mode === "Create" ? formData.preferredTime || "" : request?.preferredTime || ""}
                 onChange={handleInputChange}
-            />
+                />
             {errors.time && <p style={{ color: "red" }}>{errors.time}</p>}
+
         </div>
         {/* Attachments */}
         <div>

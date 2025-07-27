@@ -10,7 +10,7 @@ export default function Header({name, role}){
       <nav>
         <ul className="flex space-x-4">
           <li><a href="/dashboard" className="hover:text-gray-400">Dashboard</a></li>
-          {role!='ADMIN' &&  <li><a href="/request" className="hover:text-gray-400">Create Request</a></li>}
+          {role!="1" &&  <li><a href="/request" className="hover:text-gray-400">Create Request</a></li>}
           <li><a href="/login" onClick={handleLogout} className="hover:text-gray-400">Logout</a></li>
         </ul>
       </nav>
