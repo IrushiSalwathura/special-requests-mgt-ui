@@ -15,8 +15,8 @@ Before you start, make sure you have the following installed:
    Clone the project repository to your local machine.
 
 ```bash
-git clone https://github.com/IrushiSalwathura/special-requests-management-ui.git
-cd special-requests-management-ui
+git clone https://github.com/IrushiSalwathura/special-requests-mgt-ui.git
+cd special-requests-mgt-ui
 ```
 
 2. Install the required dependencies.
