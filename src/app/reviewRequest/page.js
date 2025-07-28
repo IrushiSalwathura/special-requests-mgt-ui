@@ -38,7 +38,7 @@ export default function ReviewRequest() {
     const getRequestById = () => {
         axios.get(`http://localhost:8080/requests/${requestId}`)
             .then((response) => {
-                setRequest(response.data);
+                setRequest(response.data.requestData);
                 setLoading(false);
             })
             .catch((error) => {
@@ -47,6 +47,7 @@ export default function ReviewRequest() {
                 setLoading(false);
             })
     }
+
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!decision) {
@@ -55,8 +56,15 @@ export default function ReviewRequest() {
         }
 
         const response = axios.put(`http://localhost:8080/requests/review/${requestId}`, {
+            name: request.name,
+            email: request.email,
+            type: request.type,
+            description: request.description,
             status: decision,
+            preferredDate: request.preferredDate,
+            preferredTime: request.preferredTime,
             feedback: feedback || null,
+            userId: request.userId
         })
             .then((response) => {
                 alert("Request reviewed successfully!");
@@ -70,7 +78,7 @@ export default function ReviewRequest() {
 
     if(loading) return <Loader />
     return (
-        <Suspense>
+        <>
             <Header name={user.name} role={user.role} />
             <div className="pt-20 px-20">
                 <div className="p-6 bg-white shadow-md rounded-lg border border-stone-200">
@@ -161,6 +169,6 @@ export default function ReviewRequest() {
 
                 </div>
             </div>
-        </Suspense>
+        </>
     );
 }

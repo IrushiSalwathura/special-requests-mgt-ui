@@ -1,7 +1,6 @@
 import ListItem from "./ListItem";
 
 export default function List({data,role}){
-  console.log("Data received:", data);
   const isAdmin = role == "2" ? false : true; //role=="2" means user
     return(
     <div className="overflow-x-auto p-4">
